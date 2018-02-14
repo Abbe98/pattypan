@@ -191,7 +191,7 @@ public class CreateFilePane extends WikiPane {
     if (column >= 0 && !Settings.getSetting("exifDate").isEmpty()) {
       row = 1;
       for (File file : Session.FILES) {
-        sheet.addCell(new Label(column, row++, getExifDate(file)));
+        sheet.addCell(new Label(column, row++, getExif(file, ExifSubIFDDirectory.TAG_DATETIME_ORIGINAL)));
       }
     }
 
@@ -219,19 +219,24 @@ public class CreateFilePane extends WikiPane {
    * @param filePath
    * @return
    */
-  private String getExifDate(File file) {
+  private String getExif(File file, int tag) {
 
     try {
       Metadata metadata = ImageMetadataReader.readMetadata(file);
       Directory directory = metadata.getFirstDirectoryOfType(ExifSubIFDDirectory.class);
-      int dateTag = ExifSubIFDDirectory.TAG_DATETIME_ORIGINAL;
 
-      if (directory != null && directory.containsTag(dateTag)) {
-        Date date = directory.getDate(dateTag, TimeZone.getDefault());
-        return new SimpleDateFormat("yyyy-MM-dd HH:mm").format(date);
-      } else {
+      if (directory == null || !directory.containsTag(tag)) {
         return "";
       }
+
+      if (tag == ExifSubIFDDirectory.TAG_DATETIME_ORIGINAL) {
+        Date date = directory.getDate(tag, TimeZone.getDefault());
+        return new SimpleDateFormat("yyyy-MM-dd HH:mm").format(date);
+      } else {
+        Session.LOGGER.log(Level.INFO, "not bla bla bla #TODO");
+        return "";
+      }
+
     } catch (ImageProcessingException | IOException ex) {
       Session.LOGGER.log(Level.INFO, 
           "Exif error for {0}: {1}",
